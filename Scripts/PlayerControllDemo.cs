@@ -9,27 +9,37 @@ namespace PuxxeStudio
 
 	public class PlayerControllDemo : MonoBehaviour
 	{
-		[SerializeField]
-		public Animator animator;
-		[SerializeField]
-		Rigidbody rigidbody;
-		[SerializeField]
+		public float lookSensitivity;
+		public float cameraRotationLimit;
+		private float currentCameraRotationX;
 
-		public bool isRunning = false;
+		public Camera theCamera;
 
 		public float jumpForce;
-		public bool isGrounded = false;
+		public float moveSpeed = 8f;
+
+		Rigidbody rigidbody;
+		public GameObject CheckGround;
+
+		//------현재 플레이어 상태
+
+		public bool isRunning = false; //플레이어가 걷는중인지
+		public bool isGrounded = false; //플레이어가 땅인지
+		bool isFalling = false; //플레이어가 떨어지는 중인지
+		bool isJumping = false; //플레이어가 점프중인지
+		bool EnableDoubleJumping = true; //플레이어가 더블점프가 가능한지
+		bool isDoubleJumping = false; //플레이어가 더블점프 중인지
+
+
+
+		//------에니메이션
+
+		public Animator animator;
 		Dictionary<string, int> actions = new Dictionary<string, int>();
 		[HideInInspector]
 		public int actionID = 0;
 		[SerializeField]
-		bool isJumping = false;
-		[SerializeField]
-		bool EnableDoubleJumping = true;
-		[SerializeField]
-		bool isDoubleJumping = false;
-		[SerializeField]
-		bool isFalling = false;
+
 		bool animationHasLoop = false;
 		bool actionNoLoopedReturnToIdle = true;
 		AnimatorClipInfo[] animatorInfo;
@@ -1128,18 +1138,7 @@ namespace PuxxeStudio
 			UpdateAnimationAction();
 		}
 
-		public float speed = 8f;
 
-
-
-		[SerializeField]
-		private float lookSensitivity;
-
-		[SerializeField]
-		private float cameraRotationLimit;
-		private float currentCameraRotationX;
-
-		public Camera theCamera;
 
 		void Start()
 		{
@@ -1152,23 +1151,63 @@ namespace PuxxeStudio
 			UpdateAnimationAction();
 
 
-			CharacterRotation();
+			if (Input.GetMouseButton(0))
+			{
+				CharacterRotation();
+			}
 			CameraRotation();
-			Move();                 // 1️⃣ 키보드 입력에 따라 이동
+			Move();
 
-			// vAxis = Input.GetAxisRaw("Vertical");
 
-			//대각선 이동, 방향값이 1로 고정된 벡터
-			// moveVec = new Vector3(0, 0, vAxis).normalized;
-			// transform.position += moveVec * speed * Time.deltaTime;
-
+			//-----직진
 			if (Input.GetKeyDown("w"))
 			{
 				isRunning = true;
 
 				SetActionInt(21);
 			}
-			if (Input.GetKeyUp("w"))
+			else if (Input.GetKeyUp("w"))
+			{
+				isRunning = false;
+
+				ReturnToAction(A_011_IDLE_1, 0.0f);
+			}
+			//-----오른쪽
+			if (Input.GetKeyDown("d"))
+			{
+				isRunning = true;
+
+				SetActionInt(23);
+			}
+			else if (Input.GetKeyUp("d"))
+			{
+				isRunning = false;
+
+				ReturnToAction(A_011_IDLE_1, 0.0f);
+			}
+
+			//------왼쪽
+			if (Input.GetKeyDown("a"))
+			{
+				isRunning = true;
+
+				SetActionInt(24);
+			}
+			else if (Input.GetKeyUp("a"))
+			{
+				isRunning = false;
+
+				ReturnToAction(A_011_IDLE_1, 0.0f);
+			}
+
+			//-----뒤로
+			if (Input.GetKeyDown("s"))
+			{
+				isRunning = true;
+
+				SetActionInt(22);
+			}
+			else if (Input.GetKeyUp("s"))
 			{
 				isRunning = false;
 
@@ -1196,7 +1235,7 @@ namespace PuxxeStudio
 			currentCameraRotationX -= _cameraRotationX;
 			currentCameraRotationX = Mathf.Clamp(currentCameraRotationX, -cameraRotationLimit, cameraRotationLimit);
 
-			theCamera.transform.localEulerAngles = new Vector3(currentCameraRotationX, 0f, 0f);
+			theCamera.transform.localEulerAngles = new Vector3(currentCameraRotationX + 15, 0f, 0f);
 		}
 		private void Move() // 캐릭터 움직이기
 		{
@@ -1205,7 +1244,7 @@ namespace PuxxeStudio
 			Vector3 _moveHorizontal = transform.right * _moveDirX;
 			Vector3 _moveVertical = transform.forward * _moveDirZ;
 
-			Vector3 _velocity = (_moveHorizontal + _moveVertical).normalized * speed;
+			Vector3 _velocity = (_moveHorizontal + _moveVertical).normalized * moveSpeed;
 
 			rigidbody.MovePosition(transform.position + _velocity * Time.deltaTime);
 		}
@@ -1435,6 +1474,7 @@ namespace PuxxeStudio
 			if (collision.transform.CompareTag("Ground"))
 			{
 				isGrounded = true;
+
 				if (actionID == (int)actions[A_071_LAND_1])
 				{
 					SetActionName(A_071_LAND_1);
@@ -1453,6 +1493,7 @@ namespace PuxxeStudio
 				isGrounded = false;
 			}
 		}
+
 		public void RestarLevel()
 		{
 			Debug.Log("Restart");
