@@ -15,7 +15,7 @@
 - 2025년 게임프로그래밍 과목 캡스톤 디자인 1등
 
 
-###  게임 실행 영상
+###  게임 실행 영상 <클릭해주세요!>
 [![Watch the video](https://img.youtube.com/vi/lRjWc6zfzCQ/maxresdefault.jpg)](https://www.youtube.com/watch?v=lRjWc6zfzCQ&t=28s)
 
 
